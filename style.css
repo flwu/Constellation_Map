@@ -1,0 +1,139 @@
+body {
+    background-color: #9896A9;
+}
+
+.mainPanel {
+    height: 700px;
+}
+
+#infoPanel {
+    overflow-y: auto;
+    /*background-color: #d9edf7;*/
+}
+
+#uniInt {
+    width: 90px;
+}
+
+#svgContainer {
+    width: 700px;
+    height: 700px;
+    margin-left: auto;
+    margin-right: auto;
+    /*border-style: solid;
+    border-color: #ddd;
+    border-width: 1px;*/
+}
+
+.collapse {
+    overflow-x: auto;
+}
+
+thead {
+    border-bottom: 2px solid #ddd;
+}
+
+.toolbar-cell {
+    border-left: 1px solid #fff;
+}
+
+#nodeFile, #edgeFile {
+    width: 150px;
+}
+
+.nodeTooltip {
+    position: absolute;
+    width: 350px;
+    height: auto;
+    padding: 10px;
+    background-color: white;
+    -webkit-border-radius: 10px;
+    -moz-border-radius: 10px;
+    border-radius: 10px;
+    -webkit-box-shadow: 4px 4px 10px rgba(0, 0, 0, 0.4);
+    -moz-box-shadow: 4px 4px 10px rgba(0, 0, 0, 0.4);
+    box-shadow: 4px 4px 10px rgba(0, 0, 0, 0.4);
+    pointer-events: none;
+    z-index: 1;
+}
+
+.nodeTooltip p {
+    margin: 0;
+    font-family: sans-serif;
+    font-size: 12px;
+    line-height: 20px;
+    width: inherit;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
+#genelists {
+    position: absolute;
+    font-family: sans-serif;
+    font-size: 12px;
+    width: 200px;
+    height: auto;
+    padding: 10px;
+    background-color: white;
+    -webkit-border-radius: 10px;
+    -moz-border-radius: 10px;
+    border-radius: 10px;
+    -webkit-box-shadow: 4px 4px 10px rgba(0, 0, 0, 0.4);
+    -moz-box-shadow: 4px 4px 10px rgba(0, 0, 0, 0.4);
+    box-shadow: 4px 4px 10px rgba(0, 0, 0, 0.4);
+    pointer-events: none;
+    z-index: 1;
+}
+
+#genelists p {
+    margin: 0;
+    line-height: 20px;
+    width: inherit;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
+.canvas, .mainPanel, #infoPanel {
+    background-color: #39374B;
+}
+
+.arc {
+    stroke: #C4BB9C;
+    fill: #C4BB9C;
+}
+
+.phen {
+    fill: #9A9170;
+}
+
+.geneset {
+    fill: #0571b0;
+}
+
+circle {
+    cursor: pointer;
+}
+
+line {
+    cursor: pointer;
+}
+
+.selected {
+    stroke: #ca0020;
+    stroke-width: 2;
+}
+
+.selectedNode {
+    fill: #ca0020;
+}
+
+.selectedEdge {
+    stroke: #ca0020;
+}
+.brush .extent {
+  stroke: #ddd;
+  fill-opacity: .125;
+  shape-rendering: crispEdges;
+}
