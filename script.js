@@ -1,5 +1,5 @@
 /*
-script2.js
+script.js
     javascript functions for constellationMap.html
     
     Requires:
