@@ -16,6 +16,12 @@ script.js
 // Auxilliary functions
 ////////////////////////////////////////////////////////////////////////////////
 
+// Turn on tooltips
+function tooltipsOn(event) {
+    "use strict";
+    $(".text-tooltip").tooltip();
+} // END tooltipsOn
+
 function resetClasses(event) {
     "use strict";
     
@@ -152,6 +158,94 @@ function unique(array1, array2) {
     return (outArray);
 } // END unique
 
+function metadataRemove(event) {
+    "use strict";
+    if (typeof event === "undefined") {
+        d3.select("#tableOne").select("tbody").selectAll("tr").remove();
+        d3.select("#tableTwo").select("tbody").selectAll("tr").remove();
+    } else if (event === 1) {
+        d3.select("#tableOne").select("tbody").selectAll("tr").remove();
+    } else if (event === 2) {
+        d3.select("#tableTwo").select("tbody").selectAll("tr").remove();
+    }
+} // END metadataRemove
+
+function unhideInfo(event) {
+    "use strict";
+    // Unhide live text, tables, and buttons
+    d3.selectAll(".liveText").classed("hidden", false);
+    d3.selectAll(".infoTable").classed("hidden", false);
+    d3.selectAll(".infoButton").classed("hidden", false);
+    d3.select("#exportGenelist").classed("hidden", false);
+    
+    // Hide default text
+    d3.selectAll(".defaultText").classed("hidden", true);
+} // END unhideInfo
+
+function round(value, n) {
+    // Round <value> to <n> decimal places
+    "use strict";
+    var p,
+        result;
+    
+    p = Math.pow(10, n);
+    result = Math.round(value * p) / p;
+    
+    return result;
+} // END round
+
+function interpolateCross(radius) {
+    "use strict";
+    var inCornerXpos = xScale(0) + (radius / 3),
+        outCornerXpos = xScale(0) + radius,
+        inCornerXneg = xScale(0) - (radius / 3),
+        outCornerXneg = xScale(0) - radius,
+        inCornerYpos = h - (yScale(0) + (radius / 3)),
+        outCornerYpos = h - (yScale(0) + radius),
+        inCornerYneg = h - (yScale(0) - (radius / 3)),
+        outCornerYneg = h - (yScale(0) - radius),
+        x = [],
+        y = [],
+        i,
+        outstr = "";
+    
+    x[0] = inCornerXpos;
+    x[1] = inCornerXpos;
+    x[2] = outCornerXpos;
+    x[3] = outCornerXpos;
+    x[4] = inCornerXpos;
+    x[5] = inCornerXpos;
+    x[6] = inCornerXneg;
+    x[7] = inCornerXneg;
+    x[8] = outCornerXneg;
+    x[9] = outCornerXneg;
+    x[10] = inCornerXneg;
+    x[11] = inCornerXneg;
+    
+    y[0] = outCornerYpos;
+    y[1] = inCornerYpos;
+    y[2] = inCornerYpos;
+    y[3] = inCornerYneg;
+    y[4] = inCornerYneg;
+    y[5] = outCornerYneg;
+    y[6] = outCornerYneg;
+    y[7] = inCornerYneg;
+    y[8] = inCornerYneg;
+    y[9] = inCornerYpos;
+    y[10] = inCornerYpos;
+    y[11] = outCornerYpos;
+    
+    for (i = 0; i < x.length; i += 1) {
+        outstr = outstr + x[i] + "," + y[i] + " ";
+    }
+    
+    return outstr;
+} // END interpolateCross
+
+////////////////////////////////////////////////////////////////////////////////
+// Functions for online annotation queries
+////////////////////////////////////////////////////////////////////////////////
+
 function queryMsigdb(genelist) {
     "use strict";
     var k,
@@ -180,44 +274,66 @@ function queryDavid(genelist) {
     window.open(url);
 } // END queryDavid
 
-function metadataRemove(event) {
+function queryGenemania(genelist) {
     "use strict";
-    if (typeof event === "undefined") {
-        d3.select("#tableOne").select("tbody").selectAll("tr").remove();
-        d3.select("#tableTwo").select("tbody").selectAll("tr").remove();
-    } else if (event === 1) {
-        d3.select("#tableOne").select("tbody").selectAll("tr").remove();
-    } else if (event === 2) {
-        d3.select("#tableTwo").select("tbody").selectAll("tr").remove();
+    var k,
+        url;
+    
+    // currently assume that teh organism is human (NCBI taxonomy ID 9606)
+    url = "http://genemania.org/link?o=9606&g=";
+    for (k = 0; k < genelist.length; k += 1) {
+        url += genelist[k];
+        url += "|";
     }
-} // END metadataRemove
+    window.open(url);
+} // END queryGenemania
 
-function unhideInfo(event) {
+function activateAnnot(genelist) {
     "use strict";
-    // Unhide live text, tables, and buttons
-    d3.selectAll(".liveText").classed("hidden", false);
-    d3.selectAll(".infoTable").classed("hidden", false);
-    d3.selectAll(".infoButton").classed("hidden", false);
     
-    // Hide default text
-    d3.selectAll(".defaultText").classed("hidden", true);
-} // END unhideInfo
+    d3.select(".msigdbAnnotation")
+        .on("click", function () {
+            queryMsigdb(genelist);
+        });
+    d3.select(".davidAnnotation")
+        .on("click", function () {
+            queryDavid(genelist);
+        });
 
-function round(value, n) {
-    // Round <value> to <n> decimal places
-    "use strict";
-    var p,
-        result;
-    
-    p = Math.pow(10, n);
-    result = Math.round(value * p) / p;
-    
-    return result;
-} // END round
+    d3.select(".genemaniaAnnotation")
+        .on("click", function () {
+            queryGenemania(genelist);
+        });
+} // end activateAnnot
 
 ////////////////////////////////////////////////////////////////////////////////
 // Functions for populating info panel with metadata
 ////////////////////////////////////////////////////////////////////////////////
+
+function writeGenelistDownloadlink(genelist) {
+    "use strict";
+    var str = "",
+        i;
+    
+    if (genelist.length === 0) {
+        d3.select("#exportGenelist")
+            .attr("href", "#");
+        d3.select("#exportGenelist").select("button")
+            .classed("disabled", true);
+        
+    } else {
+        d3.select("#exportGenelist").select("button")
+            .classed("disabled", false);
+        
+        for (i = 0; i < genelist.length; i += 1) {
+            str = str + genelist[i] + "\n";
+        }
+
+        d3.select("#exportGenelist")
+            .attr("href", "data:application/octet-stream;charset=utf-8;base64," + window.btoa(str))
+            .attr("download", "genelist.txt");
+    }
+} // END writeGenelistDownloadlink
 
 function displayGSMetadata(event) {
     "use strict";
@@ -266,7 +382,7 @@ function displayGSMetadata(event) {
             //// Default: intersect (all)
             d3.select("#liveTextTwo")
                 .text(ptObj.MemberGenes.length + " genes shown. " + ptObj.MemberGenes.length + " unique genes in selected geneset(s)"); // live text
-            
+            writeGenelistDownloadlink(ptObj.MemberGenes);
             tableTwoObj = d3.select("#tableTwo");
             for (i = 0; i < ptObj.MemberGenes.length; i += 1) {
                 tableTwoObj.select("tbody").append("tr")
@@ -275,15 +391,7 @@ function displayGSMetadata(event) {
             }
 
             // 3. Annotation
-            d3.select(".msigdbannotation")
-                .on("click", function () {
-                    queryMsigdb(ptObj.MemberGenes);
-                });
-
-            d3.select(".davidannotation")
-                .on("click", function () {
-                    queryDavid(ptObj.MemberGenes);
-                });
+            activateAnnot(ptObj.MemberGenes);
             
         } else if (selectedPts.length > 1) { // multiple gene sets selected
             // Unhide intersect/union form
@@ -331,6 +439,7 @@ function displayGSMetadata(event) {
             $("#fuzzFactor").val(selectedPts.length); // set intersect fuzz factor to # selected genesets
             $("#fuzzFactor").prop("disabled", false); // enable fuzz factor
             $("#uniInt").val("Intersect"); // set uniInt to intersect
+            writeGenelistDownloadlink(geneIntersect);
             tableTwoObj = d3.select("#tableTwo");
             if (geneIntersect.length === 0) {
                 tableTwoObj.select("tbody").append("tr")
@@ -344,24 +453,17 @@ function displayGSMetadata(event) {
                 }
             }
             // 3. Annotation
-            d3.select(".msigdbannotation")
-                .on("click", function () {
-                    queryMsigdb(geneIntersect);
-                });
-
-            d3.select(".davidannotation")
-                .on("click", function () {
-                    queryDavid(geneIntersect);
-                });
+            activateAnnot(geneIntersect);
             
         } // End if(selectedPts.length...)
     }
-}
+} // END displayGSMetadata
 
 ////////////////////////////////////////////////////////////////////////////////
 // Functions for brush box
 ////////////////////////////////////////////////////////////////////////////////
 
+// Executes when brush selector is moving
 function brushMove(event) {
     "use strict";
     
@@ -375,12 +477,13 @@ function brushMove(event) {
             && e[0][1] < (h - yScale(d.y)) && (h - yScale(d.y)) < e[1][1];
     });
     //points.each(function(d) { d.selected = false; });
-}
+} // END brushMove
 
+// Executes when brush selector stops moving
 function brushStop(event) {
     "use strict";
     displayGSMetadata();
-}
+} // END brushStop
 
 ////////////////////////////////////////////////////////////////////////////////
 // Function for parsing nodes.odf
@@ -448,12 +551,13 @@ function parseODF(lines) {
     outObject = {"metadata": metadata,
                      "data": data};
     return outObject;
-}
+} // END parseODF
 
 ////////////////////////////////////////////////////////////////////////////////
 // Function for setting up SVG for plotting nodes and edges
 ////////////////////////////////////////////////////////////////////////////////
 
+// Set X and Y scales (d3)
 function setScales(ext) {
     "use strict";
     var padding = 100;
@@ -463,8 +567,9 @@ function setScales(ext) {
 
     yScale.domain([-ext, ext]);
     yScale.range([ padding, h - padding]);
-}
+} // END setScales
 
+// Plot concentric circles
 function plotArcs(event) {
     "use strict";
     var arc1,
@@ -500,12 +605,13 @@ function plotArcs(event) {
         .attr("d", arc3)
         .attr("transform", "translate(" + xScale(0) + "," + (h - yScale(0)) + ")")
         .attr("class", "arc");
-}
+} // END plotArcs
 
 ////////////////////////////////////////////////////////////////////////////////
 // Function for plotting node data
 ////////////////////////////////////////////////////////////////////////////////
 
+// Plot nodes
 function plotNodes(nodes, nodesMeta) {
     "use strict";
     
@@ -520,17 +626,51 @@ function plotNodes(nodes, nodesMeta) {
         arc2,
         arc3,
         nodelen = nodes.length,
-        j;
+        j,
+        phenNode;
     
     for (j = 0; j < nodelen; j += 1) {
         nodes[j].MemberGenes = nodesMeta[nodes[j]["Gene.Set.Name"]];
     }
     
-    nodes[nodelen] = { "Phenotype": nodesMeta["Target Class"] };
-    nodes[nodelen].direction = nodesMeta.Direction;
-    nodes[nodelen].x = 0;
-    nodes[nodelen].y = 0;
+    phenNode = { "Phenotype": nodesMeta["Target Class"] };
+    phenNode.direction = nodesMeta.Direction;
+    phenNode = [phenNode];
+    
+    
+    // plot phenotype node
+    svgObj.append("polygon")
+        .attr("points", function (d) {
+            return interpolateCross(radius);
+        })
+        .attr("class", "phen")
+        .data(phenNode);
+    svgObj.select("polygon")
+        .on("mouseover", function (d) {
+            var xOffset = parseInt($("svg.canvas").css("margin-left"), 10),
+                yOffset = document.getElementById("svgContainer").getBoundingClientRect().top,
+                xPosition = xScale(0) + align + xOffset,
+                yPosition = h - yScale(0) + align + yOffset;
+        
+            d3.select("#phenTooltip")
+                .style("left", xPosition + "px")
+                .style("top", yPosition + "px")
+                .select("#phenotype")
+                .text(d.Phenotype);
 
+            d3.select("#phenTooltip")
+                //.style("left", xPosition + "px")
+                //.style("top", yPosition + "px")
+                .select("#direction")
+                .text(d.direction);
+
+            d3.select("#phenTooltip").classed("hidden", false);
+        })
+        .on("mouseout", function (d) {
+            d3.select("#phenTooltip").select("svg").remove();
+            d3.select("#phenTooltip").classed("hidden", true);
+        });
+    
     // plot nodes
     svgObj.selectAll("circle")
         .data(nodes)
@@ -543,13 +683,7 @@ function plotNodes(nodes, nodesMeta) {
             return h - yScale(d.y);
         })
         .attr("r", radius)
-        .attr("class", function (d, i) {
-            if (i === nodelen) {
-                return "phen";
-            } else {
-                return "geneset";
-            }
-        })
+        .attr("class", "geneset")
         .on("mouseover", function (d, i) {
             //var xOffset = (window.innerWidth - w) / 2,
             //    yOffset = (window.innerHeight - h) / 2,
@@ -559,56 +693,33 @@ function plotNodes(nodes, nodesMeta) {
                 yPosition = parseFloat(d3.select(this).attr("cy")) + align + yOffset;
 
             d3.select(this).attr("r", selectedRadius);
-            //d3.select(this).classed("selectedNode", true);
-            
-            if (i === nodelen) {
-                d3.select("#phenTooltip")
-                    .style("left", xPosition + "px")
-                    .style("top", yPosition + "px")
-                    .select("#phenotype")
-                    .text(d.Phenotype);
-                
-                d3.select("#phenTooltip")
-                    //.style("left", xPosition + "px")
-                    //.style("top", yPosition + "px")
-                    .select("#direction")
-                    .text(d.direction);
-                
-                d3.select("#phenTooltip").classed("hidden", false);
-            } else {
-                d3.select("#tooltip")
-                    .style("left", xPosition + "px")
-                    .style("top", yPosition + "px")
-                    .select("#name")
-                    .text(d["Gene.Set.Name"]);
+        
+            d3.select("#tooltip")
+                .style("left", xPosition + "px")
+                .style("top", yPosition + "px")
+                .select("#name")
+                .text(d["Gene.Set.Name"]);
 
-                d3.select("#tooltip")
-                    //.style("left", xPosition + "px")
-                    //.style("top", yPosition + "px")
-                    .select("#size")
-                    .text(d["gene.set.size"]);
+            d3.select("#tooltip")
+                //.style("left", xPosition + "px")
+                //.style("top", yPosition + "px")
+                .select("#size")
+                .text(d["gene.set.size"]);
 
-                d3.select("#tooltip")
-                    //.style("left", xPosition + "px")
-                    //.style("top", yPosition + "px")
-                    .select("#url")
-                    .text("Placeholder");
+            d3.select("#tooltip")
+                //.style("left", xPosition + "px")
+                //.style("top", yPosition + "px")
+                .select("#url")
+                .text("Placeholder");
 
-                d3.select("#tooltip").classed("hidden", false);
-            }
+            d3.select("#tooltip").classed("hidden", false);
         })
-        .on("mouseout", function (d, i) {
+        .on("mouseout", function (d) {
             d3.select(this).attr("r", radius);
-            //d3.select(this).classed("selectedNode", false);
-            if (i === nodelen) {
-                d3.select("#phenTooltip").select("svg").remove();
-                d3.select("#phenTooltip").classed("hidden", true);
-            } else {
-                d3.select("#tooltip").select("svg").remove();
-                d3.select("#tooltip").classed("hidden", true);
-            }
+            d3.select("#tooltip").select("svg").remove();
+            d3.select("#tooltip").classed("hidden", true);
         })
-        .on("click", function (d, i) {
+        .on("click", function (d) {
             var tableOneObj,
                 tableTwoObj,
                 GeneSetName,
@@ -616,38 +727,37 @@ function plotNodes(nodes, nodesMeta) {
                 clickedNode,
                 selectedPts,
                 dataObj;
-            
-            if (i !== nodelen) {
-                // Remove brush, edge selection
-                d3.selectAll(".brush").call(brush.clear());
-                svgObj.selectAll("line").classed("selectedEdge", false);
-                
-                if (d3.event.shiftKey) {
-                    // Highlight node
-                    clickedNode = d3.select(this);
-                    clickedNode.classed("selectedNode", true);
-                    
-                    displayGSMetadata();
-                    
-                } else {
-                    /*// Unhide tables, hide default text
-                    unhideInfo();
-                    d3.selectAll(".miniForm").classed("hidden", true);
 
-                    // Remove previous metadata in panels
-                    metadataRemove();*/
-                    
-                    // Highlight node
-                    svgObj.selectAll("circle").classed("selectedNode", false);
-                    clickedNode = d3.select(this);
-                    clickedNode.classed("selectedNode", true);
-                    
-                    displayGSMetadata();
-                } // if (d3.event.shiftKey)
-            } // if (i !== nodelen) 
+            // Remove brush, edge selection
+            d3.selectAll(".brush").call(brush.clear());
+            svgObj.selectAll("line").classed("selectedEdge", false);
+
+            if (d3.event.shiftKey) {
+                // Highlight node
+                clickedNode = d3.select(this);
+                clickedNode.classed("selectedNode", true);
+
+                displayGSMetadata();
+
+            } else {
+                /*// Unhide tables, hide default text
+                unhideInfo();
+                d3.selectAll(".miniForm").classed("hidden", true);
+
+                // Remove previous metadata in panels
+                metadataRemove();*/
+
+                // Highlight node
+                svgObj.selectAll("circle").classed("selectedNode", false);
+                clickedNode = d3.select(this);
+                clickedNode.classed("selectedNode", true);
+
+                displayGSMetadata();
+            } // if (d3.event.shiftKey)
         }); // .on("click")
-}
+} // END plotNodes
 
+// Load nodes
 function nodeLoaded(event) {
 //    alert("File Loaded Successfully");
     "use strict";
@@ -655,12 +765,13 @@ function nodeLoaded(event) {
         odfObj = parseODF(lines);
     
     plotNodes(odfObj.data, odfObj.metadata);
-}
+} // END nodeLoaded
 
 ////////////////////////////////////////////////////////////////////////////////
 // Functions for parsing edges.odf and plotting dge data
 ////////////////////////////////////////////////////////////////////////////////
 
+// Plot edges
 function plotEdges(edges, edgesMeta) {
     "use strict";
     
@@ -839,8 +950,9 @@ function plotEdges(edges, edgesMeta) {
                     queryDavid(dataObj.gsIntersect);
                 });*/
         });
-}
+} // END plotEdges
 
+// Load edges
 function edgeLoaded(event) {
     "use strict";
     
@@ -848,8 +960,78 @@ function edgeLoaded(event) {
     var lines = event.split('\n'),
         odfObj = parseODF(lines);
     plotEdges(odfObj.data, odfObj.metadata);
-}
+} // END edgeLoaded
 
+////////////////////////////////////////////////////////////////////////////////
+// Function for plotting Constellation Map
+////////////////////////////////////////////////////////////////////////////////
+
+// Function for GETting data and initializing plot
+function plotConMap(event) {
+    "use strict";
+    // HTML GET both ODF files
+    var nodeURL = "ConstellationMap.plot.data.nodes.odf",
+        edgeURL = "ConstellationMap.plot.data.edges.odf";
+    
+    $.ajax({
+        url: edgeURL,
+        type: 'GET',
+        dataType: "text",
+        success: function (data, status) {
+            console.log(status + ": successfully loaded file " + edgeURL);
+            edgeLoaded(data);
+        },
+        error: function (data, status) {
+            alert(status + ": failed to load file " + edgeURL);
+        }
+    });
+    $.ajax({
+        url: nodeURL,
+        type: 'GET',
+        dataType: "text",
+        success: function (data, status) {
+            console.log(status + ": successfully loaded file " + nodeURL);
+            nodeLoaded(data);
+        },
+        error: function (data, status) {
+            alert(status + ": failed to load file " + nodeURL);
+        }
+    });
+} // END plotConMap
+
+////////////////////////////////////////////////////////////////////////////////
+// Toolbar functions
+////////////////////////////////////////////////////////////////////////////////
+
+// Create SVG preview and write download link
+function writeSvgDownloadLink(event) {
+    "use strict";
+    
+    d3.select("#exportSvg").on("click", function () {
+        var html;
+        
+        html = d3.select("svg")
+            .attr("title", "ConstellationMapImage")
+            .attr("version", 1.1)
+            .attr("xmlns", "http://www.w3.org/2000/svg")
+            .node().parentNode.innerHTML;
+        
+        d3.select("#modalSvgBody").selectAll("img").remove(); // remove previous image
+        d3.select("#modalSvgBody").append("img")
+            .attr("src", "data:image/svg+xml;base64," + window.btoa(html))
+            .attr("class", "img-rounded img-responsive");
+        
+        d3.select("#modalSvgFooter").select("a").remove(); // remove previous link
+        d3.select("#modalSvgFooter").append("a")
+            .attr("href-lang", "image/svg+xml")
+            .attr("href", "data:image/svg+xml;base64," + window.btoa(html))
+            .attr("download", "download.svg");
+        d3.select("#modalSvgFooter").select("a").append("button")
+            .attr("type", "button")
+            .attr("class", "btn btn-primary")
+            .text("Save");
+    });
+} // END writeSvgDownloadLink
 
 ////////////////////////////////////////////////////////////////////////////////
 // jQuery ($) functions
@@ -883,6 +1065,7 @@ $(document).on('change', '#uniInt', function () {
         // 2. Member Genes
         d3.select("#liveTextTwo")
             .text(geneUnion.length + " genes shown. " + geneUnion.length + " unique genes in selected geneset(s)"); // live text
+        writeGenelistDownloadlink(geneUnion);
         tableTwoObj = d3.select("#tableTwo");
         for (i = 0; i < geneUnion.length; i += 1) {
             tableTwoObj.select("tbody").append("tr")
@@ -891,15 +1074,8 @@ $(document).on('change', '#uniInt', function () {
         }
         
         // 3. Annotation
-        d3.select(".msigdbannotation")
-            .on("click", function () {
-                queryMsigdb(geneUnion);
-            });
-
-        d3.select(".davidannotation")
-            .on("click", function () {
-                queryDavid(geneUnion);
-            });
+        activateAnnot(geneUnion);
+        
     } else { // === "Intersect"
         // Enable fuzz factor fields
         $("#fuzzFactor").val(selectedPts.length);
@@ -913,6 +1089,7 @@ $(document).on('change', '#uniInt', function () {
         // 2. Member Genes
         d3.select("#liveTextTwo")
             .text(geneIntersect.length + " genes shown. " + geneUnion.length + " unique genes in selected geneset(s)"); // live text
+        writeGenelistDownloadlink(geneIntersect);
         tableTwoObj = d3.select("#tableTwo");
         for (i = 0; i < geneIntersect.length; i += 1) {
             tableTwoObj.select("tbody").append("tr")
@@ -921,15 +1098,8 @@ $(document).on('change', '#uniInt', function () {
         }
         
         // 3. Annotation
-        d3.select(".msigdbannotation")
-            .on("click", function () {
-                queryMsigdb(geneIntersect);
-            });
+        activateAnnot(geneIntersect);
 
-        d3.select(".davidannotation")
-            .on("click", function () {
-                queryDavid(geneIntersect);
-            });
     }
 });
 
@@ -970,6 +1140,7 @@ $(document).on('change', '#fuzzFactor', function () {
         // 2. Member Genes
         d3.select("#liveTextTwo")
             .text(geneIntersectFuzzy.length + " genes shown. " + geneUnion.length + " unique genes in selected geneset(s)"); // live text
+        writeGenelistDownloadlink(geneIntersectFuzzy);
         tableTwoObj = d3.select("#tableTwo");
         for (i = 0; i < geneIntersectFuzzy.length; i += 1) {
             tableTwoObj.select("tbody").append("tr")
@@ -978,47 +1149,17 @@ $(document).on('change', '#fuzzFactor', function () {
         }
         
         // 3. Annotation
-        d3.select(".msigdbannotation")
-            .on("click", function () {
-                queryMsigdb(geneIntersectFuzzy);
-            });
+        activateAnnot(geneIntersectFuzzy);
 
-        d3.select(".davidannotation")
-            .on("click", function () {
-                queryDavid(geneIntersectFuzzy);
-            });
     }
 });
 
 // Functions to execute when document is ready
 $(document).ready(function () {
     "use strict";
-    // HTML GET both ODF files
-    var nodeURL = "ConstellationMap.plot.data.nodes.odf",
-        edgeURL = "ConstellationMap.plot.data.edges.odf";
-    
-    $.ajax({
-        url: edgeURL,
-        type: 'GET',
-        dataType: "text",
-        success: function (data, status) {
-            console.log(status + ": successfully loaded file " + edgeURL);
-            edgeLoaded(data);
-        },
-        error: function (data, status) {
-            alert(status + ": failed to load file " + edgeURL);
-        }
-    });
-    $.ajax({
-        url: nodeURL,
-        type: 'GET',
-        dataType: "text",
-        success: function (data, status) {
-            console.log(status + ": successfully loaded file " + nodeURL);
-            nodeLoaded(data);
-        },
-        error: function (data, status) {
-            alert(status + ": failed to load file " + nodeURL);
-        }
-    });
+
+    plotConMap();
+    tooltipsOn();
+    writeSvgDownloadLink();
 });
+
