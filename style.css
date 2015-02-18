@@ -1,5 +1,12 @@
 body {
-    background-color: #9896A9;
+    background-color: #f8f8f8;
+    color: #444444;
+}
+
+.navbar-inverse {
+    background-image: linear-gradient(to bottom, #444444 0, #585858 100%);
+    background-repeat: repeat-x;
+    border-color: #585858;
 }
 
 .mainPanel {
@@ -33,9 +40,9 @@ thead {
     border-bottom: 2px solid #ddd;
 }
 
-.toolbar-cell {
+/*.toolbar-cell {
     border-left: 1px solid #fff;
-}
+}*/
 
 #nodeFile, #edgeFile {
     width: 150px;
@@ -96,5 +103,33 @@ thead {
 }
 
 .canvas, .mainPanel, #infoPanel {
-    background-color: #39374B;
+    background-color: #C4C4C4;
 }
+
+.panel-primary {
+    border-color: #444444;
+}
+
+.panel-primary > .panel-heading {
+    background-image: linear-gradient(to bottom, #444444 0, #585858 100%);
+    background-repeat: repeat-x;
+}
+
+.defaultText {
+    font-style: italic;
+}
+
+.grayedText {
+    color: #848484;
+    text-decoration: line-through;
+}
+
+/*
+#edgeGroup > path {
+    fill: #778BAD;
+}
+*/
+
+/*.edgeBorder {
+    cursor: crosshair;
+}*/
