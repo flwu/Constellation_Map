@@ -128,10 +128,6 @@ thead {
     text-decoration: line-through;
 }
 
-.navbar-brand span,.navbar-brand span:hover,.navbar-brand span:focus {
-    color: #777;
-}
-
 /*
 #edgeGroup > path {
     fill: #778BAD;
